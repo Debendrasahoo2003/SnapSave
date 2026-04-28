@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SnapSave - Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header h1 span {
+            color: #ffd700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .url-input-wrapper {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-download {
+            background: #28a745;
+            color: white;
+            display: inline-block;
+            text-decoration: none;
+            margin-top: 15px;
+            padding: 12px 24px;
+            border-radius: 8px;
+        }
+
+        .btn-download:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .video-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .video-info.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            width: 100px;
+            color: #555;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .thumbnail {
+            max-width: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.loading {
+            background: #e7f3ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2a5298;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .supported-sites {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .supported-sites h3 {
+            margin-bottom: 10px;
+        }
+
+        .site-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .site-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .url-input-wrapper {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Snap<span>Save</span></h1>
+            <p>Download videos from any platform - Fast & Free</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label>📎 Paste Video URL Here</label>
+                <div class="url-input-wrapper">
+                    <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=... or any video URL">
+                    <button class="btn btn-primary" id="downloadBtn">Download Now</button>
+                </div>
+            </div>
+
+            <div id="videoInfo" class="video-info"></div>
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="supported-sites">
+            <h3>🎥 Supported Platforms</h3>
+            <div class="site-list">
+                <span class="site-badge">YouTube</span>
+                <span class="site-badge">Instagram</span>
+                <span class="site-badge">Facebook</span>
+                <span class="site-badge">Twitter/X</span>
+                <span class="site-badge">TikTok</span>
+                <span class="site-badge">Reddit</span>
+                <span class="site-badge">Vimeo</span>
+                <span class="site-badge">Dailymotion</span>
+                <span class="site-badge">And 1000+ more</span>
+            </div>
+            <p style="margin-top: 15px; font-size: 0.85em; opacity: 0.8;">
+                💡 Tip: Videos are temporarily stored and automatically deleted after 1 hour
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const videoInfoDiv = document.getElementById('videoInfo');
+        const statusDiv = document.getElementById('status');
+
+        // Fix for your YouTube URL
+        function fixYouTubeUrl(url) {
+            url = url.trim();
+            // Handle //www.youtube.com format
+            if (url.startsWith('//')) {
+                url = 'https:' + url;
+            }
+            // Handle youtube.com/live/ format
+            if (url.includes('youtube.com/live/')) {
+                const videoId = url.split('youtube.com/live/')[1].split('?')[0];
+                url = `https://www.youtube.com/watch?v=${videoId}`;
+            }
+            return url;
+        }
+
+        function showStatus(message, type, isLoading = false) {
+            statusDiv.innerHTML = '';
+            if (isLoading) {
+                statusDiv.innerHTML = `<div class="loading-spinner"></div> ${message}`;
+            } else {
+                statusDiv.innerHTML = message;
+            }
+            statusDiv.className = `status ${type} show`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.classList.remove('show');
+                }, 15000);
+            }
+        }
+
+        function hideStatus() {
+            statusDiv.classList.remove('show');
+        }
+
+        function formatDuration(seconds) {
+            if (seconds === 'LIVE') return 'LIVE';
+            if (!seconds) return 'Unknown';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showVideoInfo(info) {
+            const duration = info.is_live ? 'LIVE' : formatDuration(info.duration);
+            const views = info.views ? new Intl.NumberFormat().format(info.views) : 'N/A';
+            
+            videoInfoDiv.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #1e3c72;">📹 Video Information</h3>
+                <div class="info-row">
+                    <div class="info-label">Title:</div>
+                    <div class="info-value"><strong>${escapeHtml(info.title || 'Unknown')}</strong></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Duration:</div>
+                    <div class="info-value">${duration}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Uploader:</div>
+                    <div class="info-value">${escapeHtml(info.uploader || 'Unknown')}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Quality:</div>
+                    <div class="info-value">HD Available (Best Quality)</div>
+                </div>
+                ${info.thumbnail ? `<img src="${info.thumbnail}" class="thumbnail" alt="Thumbnail" onerror="this.style.display='none'">` : ''}
+            `;
+            videoInfoDiv.classList.add('show');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function getVideoInfo(url) {
+            try {
+                const response = await fetch('/api/info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch video info');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    showVideoInfo(data.info);
+                    return true;
+                } else {
+                    showStatus(`❌ ${data.error || 'Could not fetch video info'}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Info fetch error:', error);
+                showStatus(`❌ Error: ${error.message}. Make sure backend is running on port 5000`, 'error');
+                return false;
+            }
+        }
+
+        async function downloadVideo(url) {
+            showStatus('⏬ Downloading video... This may take a few minutes for large files...', 'loading', true);
+            downloadBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Download failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(`
+                        ✅ <strong>Download Complete!</strong><br>
+                        <strong>Title:</strong> ${escapeHtml(data.title)}<br>
+                        <br>
+                        <a href="${data.download_url}" class="btn-download" download>💾 Click Here to Save Video to Gallery</a>
+                        <br><br>
+                        <small style="display: block; margin-top: 10px; padding: 10px; background: #e9ecef; border-radius: 5px;">
+                        📱 <strong>For Mobile Users:</strong><br>
+                        1. Tap and hold on the green button above<br>
+                        2. Select "Save video" or "Download linked file"<br>
+                        3. Video will be saved to your gallery<br><br>
+                        💻 <strong>For Desktop Users:</strong><br>
+                        Just click the button above to download
+                        </small>
+                    `, 'success');
+                    videoInfoDiv.classList.remove('show');
+                } else {
+                    showStatus(`❌ Download failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+
+        downloadBtn.addEventListener('click', async () => {
+            let url = urlInput.value.trim();
+            
+            if (!url) {
+                showStatus('⚠️ Please enter a video URL', 'error');
+                return;
+            }
+            
+            // Fix the URL
+            url = fixYouTubeUrl(url);
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                showStatus('⚠️ Please enter a valid URL starting with http:// or https://', 'error');
+                return;
+            }
+            
+            console.log('Processing URL:', url);
+            hideStatus();
+            videoInfoDiv.classList.remove('show');
+            
+            // First get video info
+            showStatus('📡 Fetching video information...', 'loading', true);
+            const infoSuccess = await getVideoInfo(url);
+            
+            if (infoSuccess) {
+                // Then download
+                await downloadVideo(url);
+            } else {
+                downloadBtn.disabled = false;
+            }
+        });
+
+        // Allow Enter key
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                downloadBtn.click();
+            }
+        });
+        
+        // Show connection status on load
+        fetch('/api/info', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}) })
+            .then(() => console.log('✅ Backend connection successful'))
+            .catch(() => console.warn('⚠️ Backend connection failed. Make sure server is running on port 5000'));
+    </script>
+</body>
+</html>
